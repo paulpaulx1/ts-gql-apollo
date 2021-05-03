@@ -4,17 +4,37 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "gen": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@chakra-ui/icons": "^1.0.0",
     "@chakra-ui/react": "^1.4.2",
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0",
+    "@urql/exchange-graphcache": "^4.0.0",
+    "add": "^2.0.6",
+    "formik": "^2.2.6",
     "framer-motion": "^4.0.3",
+    "graphql": "^15.5.0",
     "next": "latest",
+    "next-urql": "^3.0.1",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "react-is": "^17.0.2",
+    "urql": "^2.0.2",
+    "yarn": "^1.22.10"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@graphql-codegen/cli": "1.21.4",
+    "@graphql-codegen/fragment-matcher": "2.0.1",
+    "@graphql-codegen/typescript": "1.22.0",
+    "@graphql-codegen/typescript-document-nodes": "1.17.11",
+    "@graphql-codegen/typescript-graphql-files-modules": "1.18.1",
+    "@graphql-codegen/typescript-operations": "1.17.16",
+    "@graphql-codegen/typescript-urql": "^2.0.6",
+    "@graphql-codegen/urql-introspection": "1.2.0",
+    "typescript": "^4.2.4"
+  }
 }
