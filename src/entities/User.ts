@@ -1,34 +1,45 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BaseEntity, OneToMany } from "typeorm";
-import { Field, Int, ObjectType } from "type-graphql";
-import { Post } from "./Post";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BaseEntity,
+  OneToMany,
+} from 'typeorm';
+import { Field, Int, ObjectType } from 'type-graphql';
+import { Post } from './Post';
+import { Upvote } from './Upvote';
 
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
-  @Field(()=> Int)
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Field(() => String)
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 
-  @Field(()=> String)
+  @Field(() => String)
   @UpdateDateColumn()
   updatedAt: Date;
 
   @Field(() => String)
-  @Column({unique: true})
+  @Column({ unique: true })
   username!: string;
 
-  @Field(() => String)
-  @Column({unique: true})
+  @Field()
+  @Column({ unique: true })
   email!: string;
 
-  @Column({type: 'text'})
+  @OneToMany(() => Post, (post) => post.creator)
+  posts: Post[];
+
+   @OneToMany(() => Upvote, (upvote) => upvote.user)
+  upvotes: Upvote[];
+
+  @Column({ type: 'text' })
   password!: string;
-
-  @OneToMany(()=> Post, post => post.creator)
-  posts: Post[]
-
 }
