@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 const Index = () => {
   const [variables, setVariables] = useState({
-    limit: 33,
+    limit: 15,
     cursor: null as null | string,
   });
   const [{ data, fetching }] = usePostsQuery({
@@ -42,7 +42,7 @@ const Index = () => {
           <Stack spacing={8}>
             {data?.posts.posts.map((p) => (
               <Box key={p.id} p={5} shadow='md' borderWidth='1px'>
-                <Heading fontSize='xl'>{p.title}</Heading>
+                <Heading fontSize='xl'>{p.title}</Heading><Text>posted by</Text>{p.creator.username}
                 <Text mt={4}>{p.textSnippet}</Text>
               </Box>
             ))}
@@ -70,4 +70,4 @@ const Index = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Index);
+export default withUrqlClient(createUrqlClient, {ssr: true})(Index);
