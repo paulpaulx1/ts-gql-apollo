@@ -30,9 +30,9 @@ const Index = () => {
     <>
       <Layout>
         <Flex>
-          <Heading>phReddit</Heading>
+          <Heading ml='2'>Phreddit</Heading>
           <NextLink href='/create-post'>
-            <Link ml={'auto'}>create post </Link>
+            <Link ml={'auto'} mr='2'>create post </Link>
           </NextLink>
         </Flex>
         <br />
@@ -52,7 +52,6 @@ const Index = () => {
           <Flex>
             <Button
               onClick={() => {
-                console.log(data.posts.hasMore)
                 setVariables({
                   limit: variables.limit,
                   cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
