@@ -4,18 +4,23 @@ import {
   Exchange,
   stringifyVariables,
 } from 'urql';
-import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
 import {
   LogoutMutation,
   MeQuery,
   MeDocument,
   LoginMutation,
   RegisterMutation,
+  VoteMutationVariables,
+  VoteMutation,
+  PostSnippetFragmentDoc,
+  usePostQuery,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import { pipe, tap } from 'wonka';
 import Router from 'next/router';
 import { isServer } from './isServer';
+import gql from 'graphql-tag';
 
 export const errorExchange: Exchange = ({ forward }) => (op$) => {
   return pipe(
@@ -47,47 +52,56 @@ export const cursorPagination = (): Resolver => {
     if (size === 0) {
       return undefined;
     }
-    console.log('fieldArgs', fieldArgs);
     const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
     const isItInTheCache = cache.resolve(
       cache.resolveFieldByKey(entityKey, fieldKey) as string,
-      "posts"
-    )
+      'posts'
+    );
     info.partial = !isItInTheCache;
-    console.log(info.partial);
     let hasMore = true;
     const results: string[] = [];
     fieldInfos.forEach((fi) => {
       const key = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
-      const data = cache.resolve(key, 'posts') as string[]
-      const _hasMore = cache.resolve(key, "hasMore") 
+      const data = cache.resolve(key, 'posts') as string[];
+      const _hasMore = cache.resolve(key, 'hasMore');
       if (!_hasMore) {
         hasMore = _hasMore as boolean;
       }
       results.push(...data);
     });
-    return { 
+    return {
       __typename: 'PaginatedPosts',
-      hasMore, 
-      posts: results };
+      hasMore,
+      posts: results,
+    };
   };
 };
+
+function invalidateAllPosts(cache: Cache) {
+  const allFields = cache.inspectFields('Query');
+  const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
+  fieldInfos.forEach((fi) => {
+    cache.invalidate('Query', 'posts', fi.arguments || {});
+  });
+}
+
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie = '';
   if (isServer()) {
     cookie = ctx?.req?.headers?.cookie;
   }
+  console.log(ctx)
   return {
     url: 'http://localhost:4111/graphql',
     fetchOptions: {
       credentials: 'include' as const,
-      headers: cookie ? { cookie } : undefined
+      headers: cookie ? { cookie } : undefined,
     },
     exchanges: [
       dedupExchange,
       cacheExchange({
         keys: {
-          PaginatedPosts: () => null
+          PaginatedPosts: () => null,
         },
         resolvers: {
           Query: {
@@ -95,16 +109,51 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
           },
         },
         updates: {
-       
           Mutation: {
+          vote: (_result, args, cache, info) => {
+              const { postId, value } = args as VoteMutationVariables;
+                console.log('cooonsollllle', cache.readFragment(
+                  gql`
+                  fragment __ on Post {
+                    id
+                    }`,
+                    {id: postId} as any
+                  ))
+              const data = cache.readFragment(
+                gql`
+                  fragment __ on Post {
+                    id
+                    points
+                    # voteStatus
+                  }
+                `,
+                { id: postId } as any
+              );
+            
+              console.log('data: ', data);
+              if (data) {
+                if (data.voteStatus === value) {
+                  return;
+                } else {
+                  const newPoints =
+                    (data.points as number) +
+                    (!data.voteStatus ? 1 : 2) * value;
+                  cache.writeFragment(
+                    gql`
+                      fragment __ on Post {
+                        points
+                        voteStatus
+                      }
+                    `,
+                    { id: postId, points: newPoints, voteStatus: value } as any
+                  );
+                }
+              }
+            },
             createPost: (_result, args, cache, info) => {
-              console.log(cache.inspectFields("Query"))
               cache.invalidate('Query', 'posts', {
-          
-                  limit: 15,
-    
-              })
-              console.log(cache.inspectFields("Query"))
+                limit: 15,
+              });
             },
             logout: (_result, args, cache, info) => {
               betterUpdateQuery<LogoutMutation, MeQuery>(
