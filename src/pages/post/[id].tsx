@@ -6,16 +6,17 @@ import { usePostQuery } from '../../generated/graphql';
 import { Layout } from '../../components/Layout';
 import { Heading } from '@chakra-ui/react';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
+import { withApollo } from '../../utils/withApollo';
 
 export const Post = ({}) => {
     const router = useRouter();
-    console.log(router.query)
+    // console.log(router.query)
 
-    const [{data, error, fetching}] = useGetPostFromUrl()
+    const {data, error, loading} = useGetPostFromUrl()
     if (error) {
         return error.message
     }
-    if (fetching) {
+    if (loading) {
         return(
             <Layout>
                 <>...loading....</>
@@ -38,4 +39,4 @@ export const Post = ({}) => {
     )
 }
 
-export default withUrqlClient(createUrqlClient, {ssr: true})(Post as any)
+export default withApollo({ ssr: true })(Post);

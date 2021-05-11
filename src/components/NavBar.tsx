@@ -1,20 +1,25 @@
 import { Box, Button, Flex, Heading, Link } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import NextLink from 'next/link';
 import { useMeQuery, useLogoutMutation } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
-
-// import { isServer } from '../utils/isServer';
+import { useApolloClient } from '@apollo/client';
+import { useRouter } from 'next/router';
 
 interface NavBarProps {}
 
 export const NavBar: React.FC<NavBarProps> = ({}) => {
-  const [{ data, fetching }] = useMeQuery();
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
+  const router = useRouter();
+  const { data, loading } = useMeQuery({
+    skip: isServer()
+  });
+  const apolloClient = useApolloClient();
+  const [logout, {loading: logoutFetching  }] = useLogoutMutation();
+
   let body = null;
-  if (fetching) {
+  if (loading) {
     //user not logged in
-  } else if (!fetching && !data?.me) {
+  } else if (!data?.me) {
     body = (
       <>
         <NextLink href='/login'>
@@ -36,8 +41,9 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
             </Button>
           </NextLink>
         <Button
-          onClick={() => {
-            logout();
+          onClick={async () => {
+            await logout();
+            await apolloClient.resetStore()
           }}
           isLoading={logoutFetching}
           variant='link'
@@ -45,7 +51,7 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
         >logout
         </Button>
         <Box ml={3}>
-          {data?.me.username}
+          {data.me.username}
         </Box>
       </Flex>
     );
@@ -54,7 +60,7 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
     <Flex zIndex={1} postion='sticky' top={0} p={4} bg='tomato'>
       <Flex flex={1} m='auto' align="center" maxW={800}>
       <Link><NextLink href='/'>
-      <Heading>Phreddit</Heading>
+      <Heading>phreddit</Heading>
       </NextLink>
       </Link>
       <Box ml={'auto'}>{body}</Box>

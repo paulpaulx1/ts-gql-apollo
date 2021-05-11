@@ -9,9 +9,9 @@ import { useField } from 'formik';
 import React, { InputHTMLAttributes } from 'react';
 
 type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
-  name: string;
   label: string;
-  textarea?: boolean
+  name: string;
+  textarea?: boolean;
 };
 
 export const InputField: React.FC<InputFieldProps> = ({
