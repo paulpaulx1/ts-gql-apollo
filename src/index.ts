@@ -10,16 +10,15 @@ import Redis from 'ioredis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
-import { createConnection } from 'typeorm'
+import { createConnection } from 'typeorm';
 import { Post } from './entities/Post';
 import { User } from './entities/User';
 
 import path from 'path';
 import { Upvote } from './entities/Upvote';
-
+import { createUserLoader } from './utils/createUserLoader';
 
 const main = async () => {
-
   const conn = await createConnection({
     type: 'postgres',
     database: 'lireddit2',
@@ -50,7 +49,6 @@ const main = async () => {
         httpOnly: false,
         sameSite: 'lax',
         secure: false,
-
       },
       secret: 'rando',
       resave: false,
@@ -62,7 +60,12 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ req, res, redis }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+    }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });
