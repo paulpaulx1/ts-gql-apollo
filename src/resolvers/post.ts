@@ -109,40 +109,51 @@ export class PostResolver {
   }
 
   @Query(() => PaginatedPosts)
+  @Query(() => PaginatedPosts)
   async posts(
-    @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { req }: MyContext
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
+    // 20 -> 21
     const realLimit = Math.min(50, limit);
-    const realLimitPlusOne = realLimit + 1;
+    const reaLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne, req.session.userId];
+    const replacements: any[] = [reaLimitPlusOne];
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
     }
-    console.log('postresolver sesh', req.session.userId);
+
     const posts = await getConnection().query(
       `
-    select p.*,
-
-      ${
-        req.session.userId
-          ? '(select value from upvote where "userId" = $2 and "postId" = p.id) "voteStatus"'
-          : 'null as "voteStatus"'
-      }
-      from post p
-    ${cursor ? `where p."createdAt" < $3` : ''}
-    order by p."createdAt" DESC 
+    select p.*
+    from post p
+    ${cursor ? `where p."createdAt" < $2` : ""}
+    order by p."createdAt" DESC
     limit $1
     `,
       replacements
     );
 
+    // const qb = getConnection()
+    //   .getRepository(Post)
+    //   .createQueryBuilder("p")
+    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
+    //   .orderBy('p."createdAt"', "DESC")
+    //   .take(reaLimitPlusOne);
+
+    // if (cursor) {
+    //   qb.where('p."createdAt" < :cursor', {
+    //     cursor: new Date(parseInt(cursor)),
+    //   });
+    // }
+
+    // const posts = await qb.getMany();
+    // console.log("posts: ", posts);
+
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === realLimitPlusOne,
+      hasMore: posts.length === reaLimitPlusOne,
     };
   }
 
