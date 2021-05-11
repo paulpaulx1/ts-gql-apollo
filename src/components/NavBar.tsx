@@ -29,17 +29,22 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
     );
   } else {
     body = (
-      <Flex>
+      <Flex align='center'>
+         <NextLink href='/create-post'>
+            <Button bg='orange' as={Link} ml={'auto'} mr='2'>
+              create post{' '}
+            </Button>
+          </NextLink>
         <Button
           onClick={() => {
             logout();
           }}
           isLoading={logoutFetching}
           variant='link'
-        >
-          logout
+          ml={3}
+        >logout
         </Button>
-        <Box pl={'4'} ml={'auto'}>
+        <Box ml={3}>
           {data?.me.username}
         </Box>
       </Flex>
@@ -47,11 +52,13 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
   }
   return (
     <Flex zIndex={1} postion='sticky' top={0} p={4} bg='tomato'>
+      <Flex flex={1} m='auto' align="center" maxW={800}>
       <Link><NextLink href='/'>
       <Heading>Phreddit</Heading>
       </NextLink>
       </Link>
       <Box ml={'auto'}>{body}</Box>
+      </Flex>
     </Flex>
   );
 };

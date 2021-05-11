@@ -15,6 +15,7 @@ import {
   VoteMutation,
   PostSnippetFragmentDoc,
   usePostQuery,
+  DeletePostMutationVariables,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import { pipe, tap } from 'wonka';
@@ -90,7 +91,8 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   if (isServer()) {
     cookie = ctx?.req?.headers?.cookie;
   }
-  console.log(ctx)
+  console.log(
+    'ctx', ctx);
   return {
     url: 'http://localhost:4111/graphql',
     fetchOptions: {
@@ -110,15 +112,17 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
-          vote: (_result, args, cache, info) => {
+
+            deletePost: (_result, args, cache, info) => {
+              cache.invalidate({
+                __typename: 'Post',
+                id: (args as DeletePostMutationVariables).id,
+              });
+            },
+
+            vote: (_result, args, cache, info) => {
               const { postId, value } = args as VoteMutationVariables;
-                console.log('cooonsollllle', cache.readFragment(
-                  gql`
-                  fragment __ on Post {
-                    id
-                    }`,
-                    {id: postId} as any
-                  ))
+          
               const data = cache.readFragment(
                 gql`
                   fragment __ on Post {
@@ -129,7 +133,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 `,
                 { id: postId } as any
               );
-            
+
               console.log('data: ', data);
               if (data) {
                 if (data.voteStatus === value) {

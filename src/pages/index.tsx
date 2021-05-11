@@ -1,6 +1,6 @@
 import { withUrqlClient } from 'next-urql';
 import { createUrqlClient } from '../utils/createUrqlClient';
-import { usePostsQuery } from '../generated/graphql';
+import { useDeletePostMutation, useMeQuery, usePostsQuery } from '../generated/graphql';
 import NextLink from 'next/link';
 import React, { useState } from 'react';
 import { UpvoteSection } from '../components/UpvoteSection';
@@ -15,49 +15,68 @@ import {
   Text,
 } from '@chakra-ui/react';
 
-
 const Index = () => {
+  const [, deletePost] = useDeletePostMutation();
   const [variables, setVariables] = useState({
     limit: 15,
     cursor: null as null | string,
   });
-  const [{ data, fetching }] = usePostsQuery({
+  const [{data: meData}] = useMeQuery()
+  const [{ data, error, fetching }] = usePostsQuery({
     variables,
   });
 
   if (!fetching && !data) {
-    return <> you got no data </>;
+    return <> {error?.message} </>;
   }
-  data ? console.log(data.posts.posts[0]) : null;
+  // data ? console.log(data.posts.posts[0]) : null;
   return (
     <>
       <Layout>
-        <Flex>
-          {/* <Heading ml='2'>Phreddit</Heading> */}
-          <NextLink href='/create-post'>
-            <Link ml={'auto'} mr='2'>
-              create post{' '}
-            </Link>
-          </NextLink>
-        </Flex>
+        <Flex>{/* <Heading ml='2'>Phreddit</Heading> */}</Flex>
         <br />
         {fetching && !data ? (
           <>loading...</>
         ) : (
           <Stack spacing={8}>
-            {data?.posts.posts.map((p) => (
-              <Flex key={p.id} p={5} shadow='md' borderWidth='1px'>
-                <UpvoteSection post={p} />
-                <Box>
-                  <NextLink href="/post/[id]" as={`/post/${p.id}`}>
-                  <Link>
-                  <Heading fontSize='xl'>{p.title}</Heading>
-                  </Link></NextLink>
-                  <Text>posted by: {p.creator.username}</Text>
-                  <Text mt={4}>{p.textSnippet}</Text>
-                </Box>
-              </Flex>
-            ))}
+            {data?.posts.posts.map((p) =>
+              !p ? null : (
+                <Flex key={p.id} p={5} shadow='md' borderWidth='1px'>
+                  <UpvoteSection post={p} />
+                  <Box flex={1}>
+                    <NextLink href='/post/[id]' as={`/post/${p.id}`}>
+                      <Link>
+                        <Heading fontSize='xl'>{p.title}</Heading>
+                      </Link>
+                    </NextLink>
+                    <Text>posted by: {p.creator.username}</Text>
+                   
+                    <Flex>
+                      <Text flex={1} mt={4}>
+                        {p.textSnippet}
+                      </Text> 
+                      {meData?.me?.id !== p.creator.id ? null :
+                      <Box ml='auto'>
+                        <Button
+                          ml='auto'
+                          onClick={() => deletePost({ id: p.id })}
+                        >
+                          delete
+                        </Button>
+                        <NextLink
+                          href='/post/edit/[id]'
+                          as={`/post/edit/${p.id}`}
+                        >
+                          <Link>
+                            <Button ml='auto'>edit</Button>
+                          </Link>
+                        </NextLink>
+                      </Box>}
+                    </Flex>
+                  </Box>
+                </Flex>
+              )
+            )}
           </Stack>
         )}
         {data && data.posts.hasMore ? (

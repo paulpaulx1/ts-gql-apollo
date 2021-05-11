@@ -5,17 +5,13 @@ import { useRouter } from 'next/router';
 import { usePostQuery } from '../../generated/graphql';
 import { Layout } from '../../components/Layout';
 import { Heading } from '@chakra-ui/react';
+import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 
 export const Post = ({}) => {
     const router = useRouter();
     console.log(router.query)
-    const intId = typeof router.query.id === 'string' ? parseInt(router.query.id) : -1
-    console.log(intId)
-    const [{data, error, fetching}] = usePostQuery({
-   
-            variables: {id: intId}
-  
-    })
+
+    const [{data, error, fetching}] = useGetPostFromUrl()
     if (error) {
         return error.message
     }
@@ -26,7 +22,7 @@ export const Post = ({}) => {
             </Layout>
         )
     }
-    console.log(data)
+
     if (!data?.post) {
         return (
             <Layout>
@@ -42,4 +38,4 @@ export const Post = ({}) => {
     )
 }
 
-export default withUrqlClient(createUrqlClient, {ssr: true})(Post)
+export default withUrqlClient(createUrqlClient, {ssr: true})(Post as any)
