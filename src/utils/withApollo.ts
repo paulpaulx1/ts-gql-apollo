@@ -6,7 +6,7 @@ import { NextPageContext } from "next";
 
 const createClient = (ctx: NextPageContext) =>
   new ApolloClient({
-    uri: "http://localhost:4111/graphql",
+    uri: "http://localhost:4112/graphql",
     credentials: "include",
     headers: {
       cookie:
